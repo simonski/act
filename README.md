@@ -1,4 +1,4 @@
-# Tasky
+# Act
 
 A terminal tool to manage todo lists.
 

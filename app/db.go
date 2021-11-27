@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS task_comments (
 
 // type DBObject interface {
 // 	GetId() int
-// 	Save(tdb *TaskyDB)
+// 	Save(tdb *ActDB)
 // }
 
 type Task struct {
@@ -173,46 +173,46 @@ type ProjectComment struct {
 }
 
 // KPDB helper struct holds the data and keys
-type TaskyDB struct {
+type ActDB struct {
 	db *sql.DB
 }
 
 // NewKPDB constructor
-func NewTaskyDB(filename string) *TaskyDB {
-	tdb := TaskyDB{}
+func NewActDB(filename string) *ActDB {
+	tdb := ActDB{}
 	tdb.Load(filename)
 	return &tdb
 }
 
-func (tbh *TaskyDB) NewProject() *Project {
+func (tbh *ActDB) NewProject() *Project {
 	pc := Project{}
 	return &pc
 }
-func (tbh *TaskyDB) NewTask(project *Project) *Task {
+func (tbh *ActDB) NewTask(project *Project) *Task {
 	t := Task{}
 	t.Project_id = project.project_id
 	return &t
 }
-func (tbh *TaskyDB) NewConfig(project *Project) *Config {
+func (tbh *ActDB) NewConfig(project *Project) *Config {
 	c := Config{}
 	c.project_id = project.project_id
 	return &c
 }
-func (tbh *TaskyDB) NewUser() *User {
+func (tbh *ActDB) NewUser() *User {
 	u := User{}
 	return &u
 }
-func (tbh *TaskyDB) NewProjectComment(project *Project) *ProjectComment {
+func (tbh *ActDB) NewProjectComment(project *Project) *ProjectComment {
 	pc := ProjectComment{}
 	return &pc
 }
-func (tbh *TaskyDB) NewTaskComment(task *Task) *TaskComment {
+func (tbh *ActDB) NewTaskComment(task *Task) *TaskComment {
 	tc := TaskComment{}
 	return &tc
 }
 
 // Load populates the db with the file
-func (tdb *TaskyDB) Load(filename string) bool {
+func (tdb *ActDB) Load(filename string) bool {
 	db, err := sql.Open("sqlite3", filename)
 	checkErr(err)
 	tdb.db = db
@@ -247,7 +247,7 @@ func (tdb *TaskyDB) Load(filename string) bool {
 	return true
 }
 
-func (tdb *TaskyDB) Init() bool {
+func (tdb *ActDB) Init() bool {
 	db := tdb.db
 	sqls := strings.Split(SQL_SCHEMA, ";")
 	for _, value := range sqls {
@@ -271,7 +271,7 @@ func (tdb *TaskyDB) Init() bool {
 	return true
 }
 
-func (tdb *TaskyDB) AddConfig(name string, value string) {
+func (tdb *ActDB) AddConfig(name string, value string) {
 	db := tdb.db
 	sql := fmt.Sprintf("insert into config (name, value) values (\"%v\", \"%v\");", name, value)
 	_, err := db.Exec(sql)
@@ -294,11 +294,11 @@ func (tdb *TaskyDB) AddConfig(name string, value string) {
 // }
 
 // Clear empties the db (without saving it)
-func (tdb *TaskyDB) Clear() {
+func (tdb *ActDB) Clear() {
 	// cdb.data.Entries = make(map[string]DBEntry)
 }
 
-func (tdb *TaskyDB) AddTask(name string) {
+func (tdb *ActDB) AddTask(name string) {
 	db := tdb.db
 	stmt, err := db.Prepare("INSERT INTO tasks(user_id, project_id, created, updated, state, name, description, deleted, archived) values(?,?,?,?,?,?,?,?, ?)")
 	checkErr(err)
@@ -320,7 +320,7 @@ func (tdb *TaskyDB) AddTask(name string) {
 
 }
 
-func (tdb *TaskyDB) ListTasks() []*Task {
+func (tdb *ActDB) ListTasks() []*Task {
 	db := tdb.db
 	rows, err := db.Query("SELECT task_id, project_id, created, updated, due, name, state FROM tasks")
 	checkErr(err)
@@ -362,7 +362,7 @@ func (tdb *TaskyDB) ListTasks() []*Task {
 
 }
 
-func (tdb *TaskyDB) GetTaskById(taskId string) *Task {
+func (tdb *ActDB) GetTaskById(taskId string) *Task {
 	db := tdb.db
 	rows, err := db.Query("SELECT task_id, project_id, created, name, state FROM tasks where task_id=?", taskId)
 	checkErr(err)
@@ -391,7 +391,7 @@ func (tdb *TaskyDB) GetTaskById(taskId string) *Task {
 
 }
 
-func (tdb *TaskyDB) Save(task *Task) {
+func (tdb *ActDB) Save(task *Task) {
 	db := tdb.db
 	if task.Task_id == 0 {
 		tdb.AddTask(task.Name)
@@ -405,7 +405,7 @@ func (tdb *TaskyDB) Save(task *Task) {
 	checkErr(err)
 }
 
-func (tdb *TaskyDB) Demo() bool {
+func (tdb *ActDB) Demo() bool {
 
 	db := tdb.db
 

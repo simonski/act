@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-func NewTestDB() *TaskyDB {
+func NewTestDB() *ActDB {
 	tempfile, _ := ioutil.TempFile("", "test-act.db")
 	filename := tempfile.Name()
 	os.Remove(filename)
-	tdb := NewTaskyDB(filename)
+	tdb := NewActDB(filename)
 	return tdb
 }
 
@@ -62,11 +62,11 @@ func TestDBCanUpdateName(t *testing.T) {
 	}
 
 	fredTask := tdb.GetTaskById("1")
-	fredTask.name = "jim"
+	fredTask.Name = "jim"
 	tdb.Save(fredTask)
 
 	t2 := tdb.GetTaskById("1")
-	if t2.name != "jim" {
+	if t2.Name != "jim" {
 		t.Log("cannot update name.")
 		t.Fail()
 	}
@@ -84,11 +84,11 @@ func TestDBConfigCRUD(t *testing.T) {
 	}
 
 	fredTask := tdb.GetTaskById("1")
-	fredTask.name = "jim"
+	fredTask.Name = "jim"
 	tdb.Save(fredTask)
 
 	t2 := tdb.GetTaskById("1")
-	if t2.name != "jim" {
+	if t2.Name != "jim" {
 		t.Log("cannot update name.")
 		t.Fail()
 	}

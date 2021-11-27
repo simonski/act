@@ -22,10 +22,10 @@ clean:
 	
 build: clean test
 	go fmt
-	go build
+	go build -v ./...
 	
 test:
-	go test
+	go test -v ./...
 
 install:
 	go install

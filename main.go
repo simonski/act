@@ -228,7 +228,7 @@ func DoInit(cli *goutils.CLI) {
 		fmt.Printf("> Error, file '%v' exists.\n", filename)
 		os.Exit(1)
 	}
-	tdb := app.NewTaskyDB(filename)
+	tdb := app.NewActDB(filename)
 	tdb.Init()
 	fmt.Printf("> %v created.\n", filename)
 	// db, err := sql.Open("sqlite3", "./.db")
@@ -252,7 +252,7 @@ func DoAdd(cli *goutils.CLI) {
 	taskName := cli.GetStringOrDie("add")
 	fmt.Printf("Task name is '%v'\n", taskName)
 	filename := GetFileName(cli)
-	tdb := app.NewTaskyDB(filename)
+	tdb := app.NewActDB(filename)
 	tdb.AddTask(taskName)
 
 }
@@ -262,12 +262,12 @@ func DoWorkOn(cli *goutils.CLI) {
 	fmt.Printf("Workon '%v'\n", x)
 	// fmt.Printf("Task name is '%v'\n", taskName)
 	// filename := GetFileName(cli)
-	// tdb := NewTaskyDB(filename)
+	// tdb := NewActDB(filename)
 	// tdb.AddTask(taskName)
 }
 
 func DoUpdate(cli *goutils.CLI) {
-	tdb := GetTaskyDB(cli)
+	tdb := GetActDB(cli)
 	taskId := cli.GetStringOrDie("-id")
 	task := tdb.GetTaskById(taskId)
 	if task == nil {
@@ -280,7 +280,7 @@ func DoUpdate(cli *goutils.CLI) {
 }
 
 func DoRm(cli *goutils.CLI) {
-	tdb := GetTaskyDB(cli)
+	tdb := GetActDB(cli)
 	taskId := cli.GetStringOrDie("-id")
 	task := tdb.GetTaskById(taskId)
 	if task == nil {
@@ -291,18 +291,18 @@ func DoRm(cli *goutils.CLI) {
 	tdb.Save(task)
 }
 
-func GetTaskyDB(cli *goutils.CLI) *app.TaskyDB {
+func GetActDB(cli *goutils.CLI) *app.ActDB {
 	filename := GetFileName(cli)
 	if !goutils.FileExists(filename) {
 		fmt.Printf("> Error, '%v' cannot be found or does not exist (try ' init').\n", filename)
 		os.Exit(1)
 	}
-	tdb := app.NewTaskyDB(filename)
+	tdb := app.NewActDB(filename)
 	return tdb
 }
 
 func DoList(cli *goutils.CLI) {
-	tdb := GetTaskyDB(cli)
+	tdb := GetActDB(cli)
 	tasks := tdb.ListTasks()
 	if len(tasks) == 0 {
 		fmt.Printf("> No tasks.\n")
@@ -395,7 +395,7 @@ func DoList(cli *goutils.CLI) {
 }
 
 func DoSql(cli *goutils.CLI) {
-	tdb := GetTaskyDB(cli)
+	tdb := GetActDB(cli)
 	tdb.Demo()
 }
 
@@ -409,7 +409,7 @@ func DoInfo(cli *goutils.CLI) {
 
 	filename := GetFileName(cli)
 
-	fmt.Printf("\nTasky is currently using the following values:\n")
+	fmt.Printf("\nAct is currently using the following values:\n")
 	fmt.Printf("\n%v          : %v\n", app.ACT_FILE, filename)
 	fmt.Printf("\n")
 	// t := NewTerminal()
