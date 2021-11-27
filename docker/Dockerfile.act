@@ -1,0 +1,3 @@
+FROM act.base
+RUN go get github.com/simonski/act@develop
+

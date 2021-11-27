@@ -1,0 +1,21 @@
+package app
+
+import (
+	"testing"
+)
+
+func main_test(t *testing.T) {
+
+	// command := "fooo"
+	// cli := goutils.NewCLI(os.Args)
+	// if command == "test" {
+	// 	db := LoadDB()
+	// 	value := cli.GetStringOrDie(command)
+	// 	valueEnc := db.Encrypt(value)
+	// 	fmt.Printf("Encrypt('%v')=\n%v\n", value, valueEnc)
+	// 	valueDec := db.Decrypt(valueEnc)
+	// 	fmt.Printf("\n\nDecrypt\n '%v'\n", valueDec)
+	// 	os.Exit(0)
+	// }
+
+}
