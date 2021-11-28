@@ -244,7 +244,7 @@ func DoInit(cli *goutils.CLI) {
 }
 
 func GetFileName(cli *goutils.CLI) string {
-	default_filename := goutils.GetEnvOrDefault(app.ACT_FILE, "./.db")
+	default_filename := goutils.GetEnvOrDefault(app.ACT_FILE, "./actdb")
 	return cli.GetStringOrDefault("-file", default_filename)
 }
 

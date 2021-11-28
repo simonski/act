@@ -1,5 +1,6 @@
 *.swp
 act
+actdb
 
 dist/
 build/
