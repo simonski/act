@@ -1,5 +1,26 @@
 # 0.0.1
 
+User Guide
+Tools Integration / API integration with codebase &/or editing text files.
+http/s server for a simple task management
+multiplayer user style via the api an a basic auth layer
+server builds from a possibly different repo / module)
+	act-api
+	act		(becomes server)
+	act-rpc
+
+milestone: use the the tool to capture tasks, not notes
+	context of location & time and machine is important as part of the note/task
+	contxt of the capture - so a user does not say this is a task, they use certain word we can then prune/capture analyse offline to decide this IS a task / action / reminder"
+
+db should version all things adn perhaps use a latest version number in the queries when modifying anything?
+db could then prune over time anything old-old
+
+users could go to diff db and/or someting else
+prepare a basic login/register/signup separate API for posrtgres and sqlite (review java cloud project)
+prepare a basic db layer module to allow me to integrate different models (e.g. user model, task model)
+
+
 # create either $ACT_FILE or $PWD/act.db
 act init
 
