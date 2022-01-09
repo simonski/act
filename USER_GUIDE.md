@@ -31,9 +31,21 @@ All tasks are part of a project; if unspecified, the project 'default'.
 
     act delete t1
 
+## Bring that back
+
+    act undo
+
+## What have I done?
+
+    act history
+
 ## Create a project
 
-    act create project
+    act create-project "foo"
+
+## Make this teh default project
+
+    act set-project "foo"
 
 ## Start a task
 
@@ -63,7 +75,7 @@ act will see this is a new task, create and start it.
 
 ## Run act as a server
 
-Multiplayer (> 1 person) works wiht act, your ACT_USERNAME, or whoami will be retained.  in this case 
+Multiplayer (> 1 person) works wiht act, your ACT_USERNAME, or whoami will be retained. In this case 
 it is easy to spoof another user but that's going to come later, via PKI if ever.
 
     act server -p 5989
@@ -71,7 +83,7 @@ it is easy to spoof another user but that's going to come later, via PKI if ever
 
 ## Connect some git reposititories as default backends to monitor for tasks
 
-Note these all only really make sense when running taksy in server mode. You can run as client-only.
+Note these all only really make sense when running act in server mode. You can run as client-only.
 you run act git sync
 
     act git add -repo git@server/reponame -project 'the name` -description `the description'

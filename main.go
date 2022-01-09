@@ -55,7 +55,7 @@ const USAGE = ` is a terminal tool to track tasks.
 
 Usage:
 
-         <command> [arguments]
+    act <command> [arguments]
 
 Environment variables
 
@@ -76,7 +76,7 @@ Client commands are:
 	ls               lists tasks and projects
 	create           creates a task or project
 
-	rm               deletes a task or project
+	rm               deletes a task or project
 	complete         marks a task or project as complete
 
 Project commands
@@ -223,14 +223,16 @@ func DoVerify(cli *goutils.CLI, printFailuresToStdOut bool) bool {
 }
 
 func DoInit(cli *goutils.CLI) {
-	filename := GetFileName(cli)
-	if goutils.FileExists(filename) {
-		fmt.Printf("> Error, file '%v' exists.\n", filename)
-		os.Exit(1)
-	}
-	tdb := app.NewActDB(filename)
+	// filename := GetFileName(cli)
+	// if goutils.FileExists(filename) {
+	// 	fmt.Printf("> Error, file '%v' exists.\n", filename)
+	// 	os.Exit(1)
+	// }
+	config := app.NewActDBConfig(cli)
+	tdb := app.NewActDB(config)
+	tdb.Connect()
 	tdb.Init()
-	fmt.Printf("> %v created.\n", filename)
+	// fmt.Printf("> %v created.\n", filename)
 	// db, err := sql.Open("sqlite3", "./.db")
 	// checkErr(err)
 
@@ -251,8 +253,11 @@ func GetFileName(cli *goutils.CLI) string {
 func DoAdd(cli *goutils.CLI) {
 	taskName := cli.GetStringOrDie("add")
 	fmt.Printf("Task name is '%v'\n", taskName)
-	filename := GetFileName(cli)
-	tdb := app.NewActDB(filename)
+	// filename := GetFileName(cli)
+	config := app.NewActDBConfig(cli)
+	tdb := app.NewActDB(config)
+	tdb.Connect()
+	// tdb := app.NewActDB(filename)
 	tdb.AddTask(taskName)
 
 }
@@ -297,7 +302,9 @@ func GetActDB(cli *goutils.CLI) *app.ActDB {
 		fmt.Printf("> Error, '%v' cannot be found or does not exist (try ' init').\n", filename)
 		os.Exit(1)
 	}
-	tdb := app.NewActDB(filename)
+	config := app.NewActDBConfig(cli)
+	tdb := app.NewActDB(config)
+	tdb.Connect()
 	return tdb
 }
 

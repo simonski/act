@@ -3,95 +3,17 @@ package app
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/simonski/goutils"
 )
 
-const SQL_SCHEMA = `    
-
-DROP TABLE IF EXISTS config;
-CREATE TABLE IF NOT EXISTS config (
-	name STRING UNIQUE NOT NULL,
-	value STRING NOT NULL
-);
-
--- DROP TABLE IF EXISTS users;
-
-DROP TABLE IF EXISTS users;
-CREATE TABLE IF NOT EXISTS users (
-	user_id  INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	username VARCHAR(64) NULL UNIQUE
-);
--- INSERT INTO USERS (username) values  ('hi');
-
-DROP TABLE IF EXISTS projects;
-CREATE TABLE IF NOT EXISTS projects (
-	project_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	name STRING NOT NULL UNIQUE,
-	user_id INTEGER,
-	description STRING NULL,
-	state STRING NOT NULL,
-	deleted BOOLEAN NOT NULL DEFAULT false,
-	archived BOOLEAN NOT NULL DEFAULT false,
-	FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
-
-DROP TABLE IF EXISTS tasks;
-CREATE TABLE IF NOT EXISTS tasks (
-	task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	due TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	user_id INTEGER,
-	project_id INTEGER,
-	state STRING NOT NULL,
-	name STRING NOT NULL,
-	description STRING NULL,
-	deleted BOOLEAN DEFAULT FALSE,
-	archived BOOLEAN DEFAULT FALSE,
-	FOREIGN KEY (user_id) REFERENCES users(user_id),
-	FOREIGN KEY (project_id) REFERENCES projects(project_id)
-);
-
-DROP TABLE IF EXISTS project_comments;
-CREATE TABLE IF NOT EXISTS project_comments (
-	comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	user_id INTEGER,
-	project_id INTEGER,
-	comment STRING NOT NULL,
-	description STRING NULL,
-	deleted BOOLEAN DEFAULT FALSE,
-	archived BOOLEAN DEFAULT FALSE,
-	FOREIGN KEY (user_id) REFERENCES users(user_id),
-	FOREIGN KEY (project_id) REFERENCES projects(project_id)
-);
-
-DROP TABLE IF EXISTS task_comments;
-CREATE TABLE IF NOT EXISTS task_comments (
-	comment_id INTEGER PRIMARY KEY AUTOINCREMENT,
-	created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	user_id INTEGER,
-	task_id INTEGER,
-	comment STRING NOT NULL,
-	description STRING NULL,
-	deleted BOOLEAN DEFAULT FALSE,
-	archived BOOLEAN DEFAULT FALSE,
-	FOREIGN KEY (user_id) REFERENCES users(user_id),
-	FOREIGN KEY (task_id) REFERENCES tasks(task_id)
-);
-`
-
-// type DBObject interface {
-// 	GetId() int
-// 	Save(tdb *ActDB)
-// }
+// )
 
 type Task struct {
 	Task_id     int
@@ -107,11 +29,6 @@ type Task struct {
 	Archived    bool
 }
 
-func NewTask() *Task {
-	t := Task{}
-	return &t
-}
-
 type Project struct {
 	project_id  int
 	created     *time.Time
@@ -124,11 +41,6 @@ type Project struct {
 	archived    bool
 }
 
-func NewProject() *Project {
-	p := Project{}
-	return &p
-}
-
 type User struct {
 	user_id  int
 	created  *time.Time
@@ -136,20 +48,10 @@ type User struct {
 	username string
 }
 
-func NewUser() *User {
-	u := User{}
-	return &u
-}
-
 type Config struct {
 	project_id int
 	name       string
 	value      string
-}
-
-func NewConfig() *Config {
-	c := Config{}
-	return &c
 }
 
 type TaskComment struct {
@@ -174,48 +76,125 @@ type ProjectComment struct {
 
 // KPDB helper struct holds the data and keys
 type ActDB struct {
-	db *sql.DB
+	db     *sql.DB
+	Config *ActDBConfig
 }
 
-// NewKPDB constructor
-func NewActDB(filename string) *ActDB {
-	tdb := ActDB{}
-	tdb.Load(filename)
-	return &tdb
+type ActDBConfig struct {
+	IsSqlite       bool
+	IsPostgres     bool
+	SqliteFilename string
+	PgHost         string
+	PgPort         int
+	PgUser         string
+	PgPassword     string
+	PgDbName       string
 }
 
-func (tbh *ActDB) NewProject() *Project {
+func NewActDBConfig(cli *goutils.CLI) *ActDBConfig {
+	dbType := cli.GetStringOrDie("-type")
+	if dbType == "postgres" {
+		PgHost := cli.GetStringOrDie("-host")
+		PgPort, _ := strconv.Atoi(cli.GetStringOrDie("-port"))
+		PgUser := cli.GetStringOrDie("-user")
+		PgPassword := cli.GetStringOrDefault("-password", "")
+		PgDbName := cli.GetStringOrDie("-name")
+		config := ActDBConfig{IsPostgres: true, PgHost: PgHost, PgPort: PgPort, PgUser: PgUser, PgPassword: PgPassword, PgDbName: PgDbName}
+		return &config
+
+	} else if dbType == "sqlite" {
+		SqliteFilename := cli.GetStringOrDie("-file")
+		config := ActDBConfig{IsSqlite: true, SqliteFilename: SqliteFilename}
+		return &config
+	} else {
+		fmt.Printf("-type can be 'postgres' or 'sqlite'\n")
+		return nil
+	}
+
+}
+
+func NewActDB(config *ActDBConfig) *ActDB {
+	return &ActDB{Config: config}
+}
+
+func (adb *ActDB) NewProject() *Project {
 	pc := Project{}
 	return &pc
 }
-func (tbh *ActDB) NewTask(project *Project) *Task {
+func (adb *ActDB) NewTask(project *Project) *Task {
 	t := Task{}
 	t.Project_id = project.project_id
 	return &t
 }
-func (tbh *ActDB) NewConfig(project *Project) *Config {
+func (adb *ActDB) NewConfig(project *Project) *Config {
 	c := Config{}
 	c.project_id = project.project_id
 	return &c
 }
-func (tbh *ActDB) NewUser() *User {
+func (adb *ActDB) NewUser() *User {
 	u := User{}
 	return &u
 }
-func (tbh *ActDB) NewProjectComment(project *Project) *ProjectComment {
+func (adb *ActDB) NewProjectComment(project *Project) *ProjectComment {
 	pc := ProjectComment{}
 	return &pc
 }
-func (tbh *ActDB) NewTaskComment(task *Task) *TaskComment {
+func (adb *ActDB) NewTaskComment(task *Task) *TaskComment {
 	tc := TaskComment{}
 	return &tc
 }
 
+func (adb *ActDB) Disconnect() bool {
+	err := adb.db.Close()
+	if err != nil {
+		panic(err)
+	}
+	return true
+}
+
+func (adb *ActDB) ConnectNoDb() bool {
+	if adb.Config.IsSqlite {
+		db, err := sql.Open("sqlite3", adb.Config.SqliteFilename)
+		checkErr(err)
+		adb.db = db
+	} else if adb.Config.IsPostgres {
+		var psqlInfo string
+		if adb.Config.PgPassword != "" {
+			psqlInfo = fmt.Sprintf("host=%s port=%d user=%s "+
+				"password=%s sslmode=disable",
+				adb.Config.PgHost, adb.Config.PgPort, adb.Config.PgUser, adb.Config.PgPassword)
+		} else {
+			psqlInfo = fmt.Sprintf("host=%s port=%d user=%s "+
+				"sslmode=disable",
+				adb.Config.PgHost, adb.Config.PgPort, adb.Config.PgUser)
+
+		}
+		db, err := sql.Open("postgres", psqlInfo)
+		adb.db = db
+		if err != nil {
+			panic(err)
+		}
+	}
+	return true
+}
+
 // Load populates the db with the file
-func (tdb *ActDB) Load(filename string) bool {
-	db, err := sql.Open("sqlite3", filename)
-	checkErr(err)
-	tdb.db = db
+func (adb *ActDB) Connect() bool {
+	if adb.Config.IsSqlite {
+		db, err := sql.Open("sqlite3", adb.Config.SqliteFilename)
+		checkErr(err)
+		adb.db = db
+	} else if adb.Config.IsPostgres {
+		psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+			"password=%s dbname=%s sslmode=disable",
+			adb.Config.PgHost, adb.Config.PgPort, adb.Config.PgUser, adb.Config.PgPassword, adb.Config.PgDbName)
+		db, err := sql.Open("postgres", psqlInfo)
+		adb.db = db
+		if err != nil {
+			panic(err)
+		}
+	}
+	// defer adb.db.Close()
 
 	// cdb.Filename = goutils.EvaluateFilename(filename)
 	// cdb.PublicKeyFilename = goutils.EvaluateFilename(pubKey)
@@ -247,9 +226,34 @@ func (tdb *ActDB) Load(filename string) bool {
 	return true
 }
 
-func (tdb *ActDB) Init() bool {
-	db := tdb.db
-	sqls := strings.Split(SQL_SCHEMA, ";")
+func (adb *ActDB) Init() bool {
+	db := adb.db
+	var sqls []string
+	if adb.Config.IsSqlite {
+		sqls = strings.Split(SQL_SCHEMA_SQLITE, ";")
+	} else {
+
+		// need to create the db first
+		// dbName := adb.Config.PgDbName
+		adb.Disconnect()
+		adb.ConnectNoDb()
+		db := adb.db
+		sql := fmt.Sprintf("create database %v;", adb.Config.PgDbName)
+		_, err := db.Exec(sql)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		// stmt, err := db.Prepare(sql)
+		// // fmt.Printf("SQL: %v\n", value)
+		// msg, err := stmt.Exec()
+		// fmt.Println(msg)
+		// checkErr(err)
+		// adb.Config.PgDbName = dbName
+
+		sqls = strings.Split(SQL_SCHEMA_POSTGRES, ";")
+	}
 	for _, value := range sqls {
 		// value = strings.ReplaceAll(value, "\n", " ")
 		if strings.Trim(value, " \n") == "" {
@@ -261,19 +265,22 @@ func (tdb *ActDB) Init() bool {
 			// fmt.Printf("Not a comment, -- index = %v\n", strings.Index(value, "--"))
 			// fmt.Printf("\n%v\n", value)
 			stmt, err := db.Prepare(value)
+			fmt.Printf("SQL: %v\n", value)
 			_, err = stmt.Exec()
+
 			checkErr(err)
 		}
 	}
 
-	tdb.AddConfig("created", time.Now().Format(time.RFC3339Nano))
-	tdb.AddConfig("version", VERSION)
+	adb.AddConfig("created", time.Now().Format(time.RFC3339Nano))
+	adb.AddConfig("version", VERSION)
 	return true
 }
 
-func (tdb *ActDB) AddConfig(name string, value string) {
-	db := tdb.db
+func (adb *ActDB) AddConfig(name string, value string) {
+	db := adb.db
 	sql := fmt.Sprintf("insert into config (name, value) values (\"%v\", \"%v\");", name, value)
+	fmt.Printf("SQL: '%v'\n", sql)
 	_, err := db.Exec(sql)
 	// fmt.Printf("%v\n", result)
 	checkErr(err)
@@ -289,17 +296,17 @@ func (tdb *ActDB) AddConfig(name string, value string) {
 
 // 	db, err := sql.Open("sqlite3", filename)
 // 	checkErr(err)
-// 	tdb.db = db
+// 	adb.db = db
 
 // }
 
 // Clear empties the db (without saving it)
-func (tdb *ActDB) Clear() {
+func (adb *ActDB) Clear() {
 	// cdb.data.Entries = make(map[string]DBEntry)
 }
 
-func (tdb *ActDB) AddTask(name string) {
-	db := tdb.db
+func (adb *ActDB) AddTask(name string) {
+	db := adb.db
 	stmt, err := db.Prepare("INSERT INTO tasks(user_id, project_id, created, updated, state, name, description, deleted, archived) values(?,?,?,?,?,?,?,?, ?)")
 	checkErr(err)
 
@@ -320,8 +327,8 @@ func (tdb *ActDB) AddTask(name string) {
 
 }
 
-func (tdb *ActDB) ListTasks() []*Task {
-	db := tdb.db
+func (adb *ActDB) ListTasks() []*Task {
+	db := adb.db
 	rows, err := db.Query("SELECT task_id, project_id, created, updated, due, name, state FROM tasks")
 	checkErr(err)
 	var task_id int
@@ -337,7 +344,7 @@ func (tdb *ActDB) ListTasks() []*Task {
 		err = rows.Scan(&task_id, &project_id, &created, &updated, &due, &name, &state)
 		fmt.Printf("created %v\n", created)
 		checkErr(err)
-		t := NewTask()
+		t := &Task{}
 		t.Task_id = task_id
 		t.Project_id = project_id
 
@@ -362,8 +369,8 @@ func (tdb *ActDB) ListTasks() []*Task {
 
 }
 
-func (tdb *ActDB) GetTaskById(taskId string) *Task {
-	db := tdb.db
+func (adb *ActDB) GetTaskById(taskId string) *Task {
+	db := adb.db
 	rows, err := db.Query("SELECT task_id, project_id, created, name, state FROM tasks where task_id=?", taskId)
 	checkErr(err)
 	var task_id int
@@ -377,7 +384,7 @@ func (tdb *ActDB) GetTaskById(taskId string) *Task {
 		return nil
 	}
 	checkErr(err)
-	t := NewTask()
+	t := &Task{}
 	t.Task_id = task_id
 	t.Project_id = project_id
 	t.State = state
@@ -391,10 +398,10 @@ func (tdb *ActDB) GetTaskById(taskId string) *Task {
 
 }
 
-func (tdb *ActDB) Save(task *Task) {
-	db := tdb.db
+func (adb *ActDB) Save(task *Task) {
+	db := adb.db
 	if task.Task_id == 0 {
-		tdb.AddTask(task.Name)
+		adb.AddTask(task.Name)
 		return
 	}
 	updated := time.Now().Format(time.RFC3339Nano)
@@ -405,9 +412,9 @@ func (tdb *ActDB) Save(task *Task) {
 	checkErr(err)
 }
 
-func (tdb *ActDB) Demo() bool {
+func (adb *ActDB) Demo() bool {
 
-	db := tdb.db
+	db := adb.db
 
 	// insert
 	stmt, err := db.Prepare("INSERT INTO userinfo(username, departname, created) values(?,?,?)")

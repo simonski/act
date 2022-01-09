@@ -5,13 +5,17 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/simonski/goutils"
 )
 
 func NewTestDB() *ActDB {
 	tempfile, _ := ioutil.TempFile("", "test-act.db")
 	filename := tempfile.Name()
 	os.Remove(filename)
-	tdb := NewActDB(filename)
+	cli := goutils.NewCLI([]string{"-type", "sqlite", "-file", filename})
+	config := NewActDBConfig(cli)
+	tdb := NewActDB(config)
 	return tdb
 }
 
