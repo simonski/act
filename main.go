@@ -8,8 +8,9 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/simonski/act/app"
+	"github.com/simonski/cli"
 	goutils "github.com/simonski/goutils"
+	"github.com/simonski/todo/app"
 
 	// make the terminal so blue
 	figure "github.com/common-nighthawk/go-figure"
@@ -23,8 +24,8 @@ import (
 
 // Environment variables
 
-// 	ACT_FILE       path to  database file to use
-// 	ACT_URL        url of running  db server
+// 	TODO_FILE       path to  database file to use
+// 	TODO_URL        url of running  db server
 
 // Client commands are:
 
@@ -55,12 +56,12 @@ const USAGE = ` is a terminal tool to track tasks.
 
 Usage:
 
-    act <command> [arguments]
+    todo <command> [arguments]
 
 Environment variables
 
-	ACT_FILE       path to  database file to use
-	ACT_URL        url of running  db server
+	TODO_FILE       path to  database file to use
+	TODO_URL        url of running  db server
 
 Client commands are:
 
@@ -113,7 +114,7 @@ Usage " help <command>" for more information.
 `
 
 func main() {
-	cli := goutils.NewCLI(os.Args)
+	cli := cli.New(os.Args)
 	command := cli.GetCommand()
 	if command == "help" {
 		DoLogo(os.Args[0])
@@ -205,31 +206,31 @@ func isDescribe(command string) bool {
 }
 
 // A 'get' is basically not a a list, delete or a put
-func isGet(command string, cli *goutils.CLI) bool {
+func isGet(command string, cli *cli.CLI) bool {
 	return command == "get"
 }
 
-func isPut(command string, cli *goutils.CLI) bool {
+func isPut(command string, cli *cli.CLI) bool {
 	return command == "put"
 }
 
 // DoVerify performs verification of ~/.KPfile, encryption/decryption using
 // specified keys
-func DoVerify(cli *goutils.CLI, printFailuresToStdOut bool) bool {
+func DoVerify(cli *cli.CLI, printFailuresToStdOut bool) bool {
 	overallValid := true
 
 	return overallValid
 	// fmt.Printf("%v =%v, exists=%v\n", KP_ENCRYPTION_ENABLED, privateKeyExists)
 }
 
-func DoInit(cli *goutils.CLI) {
+func DoInit(cli *cli.CLI) {
 	// filename := GetFileName(cli)
 	// if goutils.FileExists(filename) {
 	// 	fmt.Printf("> Error, file '%v' exists.\n", filename)
 	// 	os.Exit(1)
 	// }
-	config := app.NewActDBConfig(cli)
-	tdb := app.NewActDB(config)
+	config := app.NewTodoDBConfig(cli)
+	tdb := app.NewTodoDB(config)
 	tdb.Connect()
 	tdb.Init()
 	// fmt.Printf("> %v created.\n", filename)
@@ -245,34 +246,34 @@ func DoInit(cli *goutils.CLI) {
 	// checkErr(err)
 }
 
-func GetFileName(cli *goutils.CLI) string {
-	default_filename := goutils.GetEnvOrDefault(app.ACT_FILE, "./actdb")
-	return cli.GetStringOrDefault("-file", default_filename)
+func GetFileName(c *cli.CLI) string {
+	default_filename := cli.GetEnvOrDefault(app.TODO_FILE, "./tododb")
+	return c.GetStringOrDefault("-file", default_filename)
 }
 
-func DoAdd(cli *goutils.CLI) {
+func DoAdd(cli *cli.CLI) {
 	taskName := cli.GetStringOrDie("add")
 	fmt.Printf("Task name is '%v'\n", taskName)
 	// filename := GetFileName(cli)
-	config := app.NewActDBConfig(cli)
-	tdb := app.NewActDB(config)
+	config := app.NewTodoDBConfig(cli)
+	tdb := app.NewTodoDB(config)
 	tdb.Connect()
-	// tdb := app.NewActDB(filename)
+	// tdb := app.NewTodoDB(filename)
 	tdb.AddTask(taskName)
 
 }
 
-func DoWorkOn(cli *goutils.CLI) {
+func DoWorkOn(cli *cli.CLI) {
 	x := cli.GetStringOrDie("workon")
 	fmt.Printf("Workon '%v'\n", x)
 	// fmt.Printf("Task name is '%v'\n", taskName)
 	// filename := GetFileName(cli)
-	// tdb := NewActDB(filename)
+	// tdb := NewTodoDB(filename)
 	// tdb.AddTask(taskName)
 }
 
-func DoUpdate(cli *goutils.CLI) {
-	tdb := GetActDB(cli)
+func DoUpdate(cli *cli.CLI) {
+	tdb := GetTodoDB(cli)
 	taskId := cli.GetStringOrDie("-id")
 	task := tdb.GetTaskById(taskId)
 	if task == nil {
@@ -284,8 +285,8 @@ func DoUpdate(cli *goutils.CLI) {
 	tdb.Save(task)
 }
 
-func DoRm(cli *goutils.CLI) {
-	tdb := GetActDB(cli)
+func DoRm(cli *cli.CLI) {
+	tdb := GetTodoDB(cli)
 	taskId := cli.GetStringOrDie("-id")
 	task := tdb.GetTaskById(taskId)
 	if task == nil {
@@ -296,20 +297,20 @@ func DoRm(cli *goutils.CLI) {
 	tdb.Save(task)
 }
 
-func GetActDB(cli *goutils.CLI) *app.ActDB {
+func GetTodoDB(cli *cli.CLI) *app.TodoDB {
 	filename := GetFileName(cli)
 	if !goutils.FileExists(filename) {
 		fmt.Printf("> Error, '%v' cannot be found or does not exist (try ' init').\n", filename)
 		os.Exit(1)
 	}
-	config := app.NewActDBConfig(cli)
-	tdb := app.NewActDB(config)
+	config := app.NewTodoDBConfig(cli)
+	tdb := app.NewTodoDB(config)
 	tdb.Connect()
 	return tdb
 }
 
-func DoList(cli *goutils.CLI) {
-	tdb := GetActDB(cli)
+func DoList(cli *cli.CLI) {
+	tdb := GetTodoDB(cli)
 	tasks := tdb.ListTasks()
 	if len(tasks) == 0 {
 		fmt.Printf("> No tasks.\n")
@@ -401,8 +402,8 @@ func DoList(cli *goutils.CLI) {
 
 }
 
-func DoSql(cli *goutils.CLI) {
-	tdb := GetActDB(cli)
+func DoSql(cli *cli.CLI) {
+	tdb := GetTodoDB(cli)
 	tdb.Demo()
 }
 
@@ -412,12 +413,12 @@ func DoLogo(appName string) {
 	f.Print()
 }
 
-func DoInfo(cli *goutils.CLI) {
+func DoInfo(cli *cli.CLI) {
 
 	filename := GetFileName(cli)
 
-	fmt.Printf("\nAct is currently using the following values:\n")
-	fmt.Printf("\n%v          : %v\n", app.ACT_FILE, filename)
+	fmt.Printf("\nTodo is currently using the following values:\n")
+	fmt.Printf("\n%v          : %v\n", app.TODO_FILE, filename)
 	fmt.Printf("\n")
 	// t := NewTerminal()
 
@@ -438,10 +439,10 @@ func DoInfo(cli *goutils.CLI) {
 
 }
 
-func DoUsage(cli *goutils.CLI) {
-	fmt.Println(USAGE)
+func DoUsage(cli *cli.CLI) {
+	fmt.Print(USAGE)
 }
 
-func DoVersion(cli *goutils.CLI) {
+func DoVersion(cli *cli.CLI) {
 	fmt.Printf("%v\n", app.VERSION)
 }

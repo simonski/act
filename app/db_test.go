@@ -6,16 +6,16 @@ import (
 	"os"
 	"testing"
 
-	"github.com/simonski/goutils"
+	"github.com/simonski/cli"
 )
 
-func NewTestDB() *ActDB {
-	tempfile, _ := ioutil.TempFile("", "test-act.db")
+func NewTestDB() *TodoDB {
+	tempfile, _ := ioutil.TempFile("", "test-todo.db")
 	filename := tempfile.Name()
 	os.Remove(filename)
-	cli := goutils.NewCLI([]string{"-type", "sqlite", "-file", filename})
-	config := NewActDBConfig(cli)
-	tdb := NewActDB(config)
+	cli := cli.New([]string{"-type", "sqlite", "-file", filename})
+	config := NewTodoDBConfig(cli)
+	tdb := NewTodoDB(config)
 	return tdb
 }
 

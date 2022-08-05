@@ -1,6 +1,7 @@
+.vscode
 *.swp
-act
-actdb
+todo
+tododb
 
 dist/
 build/

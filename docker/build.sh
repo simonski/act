@@ -1,2 +1,2 @@
-docker build -f Dockerfile -t act.base . 
-docker build -f Dockerfile.act -t act . 
+docker build -f Dockerfile -t todo.base . 
+docker build -f Dockerfile.todo -t todo . 

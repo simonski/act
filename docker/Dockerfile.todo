@@ -1,0 +1,3 @@
+FROM todo.base
+RUN go get github.com/simonski/todo@develop
+

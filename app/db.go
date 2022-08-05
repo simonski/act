@@ -10,7 +10,7 @@ import (
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/simonski/goutils"
+	"github.com/simonski/cli"
 )
 
 // )
@@ -75,12 +75,12 @@ type ProjectComment struct {
 }
 
 // KPDB helper struct holds the data and keys
-type ActDB struct {
+type TodoDB struct {
 	db     *sql.DB
-	Config *ActDBConfig
+	Config *TodoDBConfig
 }
 
-type ActDBConfig struct {
+type TodoDBConfig struct {
 	IsSqlite       bool
 	IsPostgres     bool
 	SqliteFilename string
@@ -91,7 +91,7 @@ type ActDBConfig struct {
 	PgDbName       string
 }
 
-func NewActDBConfig(cli *goutils.CLI) *ActDBConfig {
+func NewTodoDBConfig(cli *cli.CLI) *TodoDBConfig {
 	dbType := cli.GetStringOrDie("-type")
 	if dbType == "postgres" {
 		PgHost := cli.GetStringOrDie("-host")
@@ -99,12 +99,12 @@ func NewActDBConfig(cli *goutils.CLI) *ActDBConfig {
 		PgUser := cli.GetStringOrDie("-user")
 		PgPassword := cli.GetStringOrDefault("-password", "")
 		PgDbName := cli.GetStringOrDie("-name")
-		config := ActDBConfig{IsPostgres: true, PgHost: PgHost, PgPort: PgPort, PgUser: PgUser, PgPassword: PgPassword, PgDbName: PgDbName}
+		config := TodoDBConfig{IsPostgres: true, PgHost: PgHost, PgPort: PgPort, PgUser: PgUser, PgPassword: PgPassword, PgDbName: PgDbName}
 		return &config
 
 	} else if dbType == "sqlite" {
 		SqliteFilename := cli.GetStringOrDie("-file")
-		config := ActDBConfig{IsSqlite: true, SqliteFilename: SqliteFilename}
+		config := TodoDBConfig{IsSqlite: true, SqliteFilename: SqliteFilename}
 		return &config
 	} else {
 		fmt.Printf("-type can be 'postgres' or 'sqlite'\n")
@@ -113,38 +113,38 @@ func NewActDBConfig(cli *goutils.CLI) *ActDBConfig {
 
 }
 
-func NewActDB(config *ActDBConfig) *ActDB {
-	return &ActDB{Config: config}
+func NewTodoDB(config *TodoDBConfig) *TodoDB {
+	return &TodoDB{Config: config}
 }
 
-func (adb *ActDB) NewProject() *Project {
+func (adb *TodoDB) NewProject() *Project {
 	pc := Project{}
 	return &pc
 }
-func (adb *ActDB) NewTask(project *Project) *Task {
+func (adb *TodoDB) NewTask(project *Project) *Task {
 	t := Task{}
 	t.Project_id = project.project_id
 	return &t
 }
-func (adb *ActDB) NewConfig(project *Project) *Config {
+func (adb *TodoDB) NewConfig(project *Project) *Config {
 	c := Config{}
 	c.project_id = project.project_id
 	return &c
 }
-func (adb *ActDB) NewUser() *User {
+func (adb *TodoDB) NewUser() *User {
 	u := User{}
 	return &u
 }
-func (adb *ActDB) NewProjectComment(project *Project) *ProjectComment {
+func (adb *TodoDB) NewProjectComment(project *Project) *ProjectComment {
 	pc := ProjectComment{}
 	return &pc
 }
-func (adb *ActDB) NewTaskComment(task *Task) *TaskComment {
+func (adb *TodoDB) NewTaskComment(task *Task) *TaskComment {
 	tc := TaskComment{}
 	return &tc
 }
 
-func (adb *ActDB) Disconnect() bool {
+func (adb *TodoDB) Disconnect() bool {
 	err := adb.db.Close()
 	if err != nil {
 		panic(err)
@@ -152,7 +152,7 @@ func (adb *ActDB) Disconnect() bool {
 	return true
 }
 
-func (adb *ActDB) ConnectNoDb() bool {
+func (adb *TodoDB) ConnectNoDb() bool {
 	if adb.Config.IsSqlite {
 		db, err := sql.Open("sqlite3", adb.Config.SqliteFilename)
 		checkErr(err)
@@ -179,7 +179,7 @@ func (adb *ActDB) ConnectNoDb() bool {
 }
 
 // Load populates the db with the file
-func (adb *ActDB) Connect() bool {
+func (adb *TodoDB) Connect() bool {
 	if adb.Config.IsSqlite {
 		db, err := sql.Open("sqlite3", adb.Config.SqliteFilename)
 		checkErr(err)
@@ -226,7 +226,7 @@ func (adb *ActDB) Connect() bool {
 	return true
 }
 
-func (adb *ActDB) Init() bool {
+func (adb *TodoDB) Init() bool {
 	db := adb.db
 	var sqls []string
 	if adb.Config.IsSqlite {
@@ -277,7 +277,7 @@ func (adb *ActDB) Init() bool {
 	return true
 }
 
-func (adb *ActDB) AddConfig(name string, value string) {
+func (adb *TodoDB) AddConfig(name string, value string) {
 	db := adb.db
 	sql := fmt.Sprintf("insert into config (name, value) values (\"%v\", \"%v\");", name, value)
 	fmt.Printf("SQL: '%v'\n", sql)
@@ -286,7 +286,7 @@ func (adb *ActDB) AddConfig(name string, value string) {
 	checkErr(err)
 }
 
-// func DoSql(cli *goutils.CLI) {
+// func DoSql(cli *cli.CLI) {
 // 	db, err := sql.Open("sqlite3", "./foo.db")
 // 	checkErr(err)
 
@@ -301,11 +301,11 @@ func (adb *ActDB) AddConfig(name string, value string) {
 // }
 
 // Clear empties the db (without saving it)
-func (adb *ActDB) Clear() {
+func (adb *TodoDB) Clear() {
 	// cdb.data.Entries = make(map[string]DBEntry)
 }
 
-func (adb *ActDB) AddTask(name string) {
+func (adb *TodoDB) AddTask(name string) {
 	db := adb.db
 	stmt, err := db.Prepare("INSERT INTO tasks(user_id, project_id, created, updated, state, name, description, deleted, archived) values(?,?,?,?,?,?,?,?, ?)")
 	checkErr(err)
@@ -327,7 +327,7 @@ func (adb *ActDB) AddTask(name string) {
 
 }
 
-func (adb *ActDB) ListTasks() []*Task {
+func (adb *TodoDB) ListTasks() []*Task {
 	db := adb.db
 	rows, err := db.Query("SELECT task_id, project_id, created, updated, due, name, state FROM tasks")
 	checkErr(err)
@@ -369,7 +369,7 @@ func (adb *ActDB) ListTasks() []*Task {
 
 }
 
-func (adb *ActDB) GetTaskById(taskId string) *Task {
+func (adb *TodoDB) GetTaskById(taskId string) *Task {
 	db := adb.db
 	rows, err := db.Query("SELECT task_id, project_id, created, name, state FROM tasks where task_id=?", taskId)
 	checkErr(err)
@@ -398,7 +398,7 @@ func (adb *ActDB) GetTaskById(taskId string) *Task {
 
 }
 
-func (adb *ActDB) Save(task *Task) {
+func (adb *TodoDB) Save(task *Task) {
 	db := adb.db
 	if task.Task_id == 0 {
 		adb.AddTask(task.Name)
@@ -412,7 +412,7 @@ func (adb *ActDB) Save(task *Task) {
 	checkErr(err)
 }
 
-func (adb *ActDB) Demo() bool {
+func (adb *TodoDB) Demo() bool {
 
 	db := adb.db
 

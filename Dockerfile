@@ -7,5 +7,5 @@ RUN apk add xsel
 #ENV GOPATH=/root/go
 #ENV GOBIN=/root/go/bin
 #ENV PATH=$PATH:$GOBIN
-COPY act_linux /act
+COPY todo_linux /todo
 

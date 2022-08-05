@@ -90,7 +90,7 @@ package app
 
 // // type DBObject interface {
 // // 	GetId() int
-// // 	Save(tdb *ActDB)
+// // 	Save(tdb *TodoDB)
 // // }
 
 // type Task struct {
@@ -173,46 +173,46 @@ package app
 // }
 
 // // KPDB helper struct holds the data and keys
-// type ActDB struct {
+// type TodoDB struct {
 // 	db *sql.DB
 // }
 
 // // NewKPDB constructor
-// func NewActDB(filename string) *ActDB {
-// 	tdb := ActDB{}
+// func NewTodoDB(filename string) *TodoDB {
+// 	tdb := TodoDB{}
 // 	tdb.Load(filename)
 // 	return &tdb
 // }
 
-// func (tbh *ActDB) NewProject() *Project {
+// func (tbh *TodoDB) NewProject() *Project {
 // 	pc := Project{}
 // 	return &pc
 // }
-// func (tbh *ActDB) NewTask(project *Project) *Task {
+// func (tbh *TodoDB) NewTask(project *Project) *Task {
 // 	t := Task{}
 // 	t.Project_id = project.project_id
 // 	return &t
 // }
-// func (tbh *ActDB) NewConfig(project *Project) *Config {
+// func (tbh *TodoDB) NewConfig(project *Project) *Config {
 // 	c := Config{}
 // 	c.project_id = project.project_id
 // 	return &c
 // }
-// func (tbh *ActDB) NewUser() *User {
+// func (tbh *TodoDB) NewUser() *User {
 // 	u := User{}
 // 	return &u
 // }
-// func (tbh *ActDB) NewProjectComment(project *Project) *ProjectComment {
+// func (tbh *TodoDB) NewProjectComment(project *Project) *ProjectComment {
 // 	pc := ProjectComment{}
 // 	return &pc
 // }
-// func (tbh *ActDB) NewTaskComment(task *Task) *TaskComment {
+// func (tbh *TodoDB) NewTaskComment(task *Task) *TaskComment {
 // 	tc := TaskComment{}
 // 	return &tc
 // }
 
 // // Load populates the db with the file
-// func (tdb *ActDB) Load(filename string) bool {
+// func (tdb *TodoDB) Load(filename string) bool {
 // 	db, err := sql.Open("sqlite3", filename)
 // 	checkErr(err)
 // 	tdb.db = db
@@ -247,7 +247,7 @@ package app
 // 	return true
 // }
 
-// func (tdb *ActDB) Init() bool {
+// func (tdb *TodoDB) Init() bool {
 // 	db := tdb.db
 // 	sqls := strings.Split(SQL_SCHEMA, ";")
 // 	for _, value := range sqls {
@@ -271,7 +271,7 @@ package app
 // 	return true
 // }
 
-// func (tdb *ActDB) AddConfig(name string, value string) {
+// func (tdb *TodoDB) AddConfig(name string, value string) {
 // 	db := tdb.db
 // 	sql := fmt.Sprintf("insert into config (name, value) values (\"%v\", \"%v\");", name, value)
 // 	_, err := db.Exec(sql)
@@ -294,11 +294,11 @@ package app
 // // }
 
 // // Clear empties the db (without saving it)
-// func (tdb *ActDB) Clear() {
+// func (tdb *TodoDB) Clear() {
 // 	// cdb.data.Entries = make(map[string]DBEntry)
 // }
 
-// func (tdb *ActDB) AddTask(name string) {
+// func (tdb *TodoDB) AddTask(name string) {
 // 	db := tdb.db
 // 	stmt, err := db.Prepare("INSERT INTO tasks(user_id, project_id, created, updated, state, name, description, deleted, archived) values(?,?,?,?,?,?,?,?, ?)")
 // 	checkErr(err)
@@ -320,7 +320,7 @@ package app
 
 // }
 
-// func (tdb *ActDB) ListTasks() []*Task {
+// func (tdb *TodoDB) ListTasks() []*Task {
 // 	db := tdb.db
 // 	rows, err := db.Query("SELECT task_id, project_id, created, updated, due, name, state FROM tasks")
 // 	checkErr(err)
@@ -362,7 +362,7 @@ package app
 
 // }
 
-// func (tdb *ActDB) GetTaskById(taskId string) *Task {
+// func (tdb *TodoDB) GetTaskById(taskId string) *Task {
 // 	db := tdb.db
 // 	rows, err := db.Query("SELECT task_id, project_id, created, name, state FROM tasks where task_id=?", taskId)
 // 	checkErr(err)
@@ -391,7 +391,7 @@ package app
 
 // }
 
-// func (tdb *ActDB) Save(task *Task) {
+// func (tdb *TodoDB) Save(task *Task) {
 // 	db := tdb.db
 // 	if task.Task_id == 0 {
 // 		tdb.AddTask(task.Name)
@@ -405,7 +405,7 @@ package app
 // 	checkErr(err)
 // }
 
-// func (tdb *ActDB) Demo() bool {
+// func (tdb *TodoDB) Demo() bool {
 
 // 	db := tdb.db
 

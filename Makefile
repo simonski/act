@@ -1,8 +1,8 @@
-default_target: usage
+default_target: build
 .PHONY : default_target upload
 
-usage:
-	@echo "The act Makefile"
+help:
+	@echo "The todo Makefile"
 	@echo ""
 	@echo "Usage : make <command> "
 	@echo ""
@@ -37,6 +37,6 @@ release:
 	goreleaser --snapshot --skip-publish --rm-dist
 
 docker: build
-	GOOS=linux GOARCH=amd64 go build -o act_linux
-	docker build -t act .
+	GOOS=linux GOARCH=amd64 go build -o todo_linux
+	docker build -t todo .
 

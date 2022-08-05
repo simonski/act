@@ -1,4 +1,4 @@
-# Act
+# Todo
 
 A terminal tool to manage todo lists.
 
@@ -11,7 +11,7 @@ This is OSS - if you want to contribute please read the [DEVELOPER_GUIDE.md](DEV
 Install via `go get`
 
 ```bash
-go get github.com/simonski/act
+go get github.com/simonski/todo
 ```
 
-This will install `act` onto your `$GOBIN`. Please ensure `$GOBIN` is on your `$PATH`.  You can now type `act`.
+This will install `todo` onto your `$GOBIN`. Please ensure `$GOBIN` is on your `$PATH`.  You can now type `todo`.
